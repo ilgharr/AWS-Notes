@@ -1,0 +1,844 @@
+IAM NOTES
+	IAM is a Global service
+	Inline policy: policy for a single user
+	
+	IAM plicy structure
+	{
+	version
+	identifier for policy
+	statement{
+		statement ID (optional)
+		effect: this statement either allows or denies
+		principle: list of accounts, users, roles this policy appleies to
+		action: list of actions this policy denies or allows
+		resource: list of resources to which the actions applied to
+		cindition: conditions for which this policy is in effect (optional)
+	}
+
+	MFA device options
+		Virtual MFA
+		universal 2fa security key
+		hardware key fob
+
+	users can access AWS through
+		AWS website management console
+		ALI
+		SDK
+
+	Roles can be applied to AWS services aswell
+
+	Audit: IAM credential reports and IAM access advisor
+
+	IAM Guidelines and Best Practices
+		-root account is only used for setting up AWS account
+		-each physical user must have their own user
+		-assign users t groups and permissions to groups
+		-create strong password policy
+		-use and enforce 2FA
+		-create and use roles for giving permissin to services
+		-use access keys for CLI or SDK
+
+	Shared responsibility model for AWS
+		AWS responsibility
+			infrastructure
+			security
+			configuration and vulnerability aalysis
+			compliance validation
+		
+		My responsibility
+			creation, management and monitoring of users, groups, roles, policies
+			enabling MFA
+			key rotation
+			applying appropriate permissions
+			analyze access patterns and review permissions
+
+	NOTE: groups can not be part of other groups
+
+EC2 FUNDAMENTALS
+
+	Elastic Compute Cloud
+	Rent virtual machines EC2
+	Store data on on virtual machines EBS
+	distributing load across machines ELB
+	scaling the services using auti-scaing group ASG
+
+	Sizing and Configuration options
+		Operating systems: windows, mac, linux
+		compute power CPU
+		RAM
+		Storage
+			network attached EBS & EFS
+			hardware attached EC2 instance store
+		network car speed, public IP
+		firewall rules: security group
+		bootstrap script: EC2 user dat
+
+	EC2 Instance types
+		general purpose
+			balanced all around
+
+		compute optimized
+			compute intensive tasks
+				game servers
+				machine learning
+				batch processing
+				media transcoding
+				scientific modeling
+
+		memory optimized
+			performance for processing large data in memory, RAM
+				web scale cache stores
+				in memory database optimization
+				high performance databases
+				realtime processing for unstructured data
+
+		accelerated computing
+
+		storage optimized
+			high sequential read and write access to large data on local storage
+				high frequency online transaction processing
+				cache for in memory databases
+				data warehousing applications
+				distributed file systems
+
+		instance features
+
+		measuring instance performance
+
+	EC2 naming convention
+		example m5.2xlarge
+			m: instance class
+			5: generation of instance, improved hardware
+			2xlarge: size of the instance, more memory, storage, cpu ...etc
+
+	NOTE: 1-3 means 1 or 3 years, not between 1 to 3 years
+	EC2 purchasing options
+		On-Demand: short workload, predictable pricing, pay by second
+			pay for what you use: windows or linux, pay per second after first minute
+			has highest cost but no upfront payment
+			no long term commitment
+			Recommended for short term and uninterrupted workloads where you can't predict how the application will behave
+		Reserved: 1-3 years, long workloads
+			reserve specific instance attributes (instance type, Region, Tenancy, OS)
+			reservation period: 1 year (+discount), 3 years (++discount)
+			payment options: no upfront(+discount), partial upfront(++discount), all upfront(+++discount)
+			reserved instances scope: regional or zonal
+			Recommended for steady state usage (database)
+			Buy and Sell reserved instances in marketplace.
+		Convertible Reserved: 1-3 years, long workloads, flexible instances
+			can change instance type, family, OS, Scope and Tenancy
+		Savings plan: 1-3 years, commitment to an amount of usage, long workload
+			discount based on long term usage
+			Commit to a usage, xample: 10$/hour for 1-3 years
+			extra usage is billed on demand price
+			locked to a specific family and region
+				example: M5 in us-east but can have m5.large, m5.2xlarge or any other m5 family
+			flexible across:
+				instance size
+				OS
+				Tenancy(host, dedicated, default)
+		Spot instances: short workloads, cheap, can lose instances
+			most discount
+			instance is lost if max price less than current spot price
+			work that may fail often
+				bath jobs
+				data analyst
+				image processing
+				distributed workloads
+			not suitable for critical jobs or databases
+		Dedicated hosts: book an entire physical server, control instacnce placement
+			allows compliance requirements
+			use existing server bund software(pocket, core, virtual machine)
+			On-demand: pay per second for active dedicated host
+			Reserved: 1-3 years(no upfront, partial upfront, all upfront)
+			most expencive
+			useful for software that have compliance licensing model(bring your own license)
+		Dedicated istances: no other customer will share your hardware
+			instance that is run on hardware that is dedicated to you
+			may share hardware with other instances in same account
+			no control over instance placement(can move hardware after start-stop)
+		Capacity reservations: reserve capacity in a specific AZ for any duration
+			reserve ondemand instances capacity in a specific AZ for a duration
+			access to EC2 capacity at all times
+			no time commitments(create/cancel any time), no discounts
+			combine with regional reserved instances and savings plan to benefit from billing discounts
+			charged on demand weather instance is running or not
+			suitable for short-term uninterrupted work that needs to be in a specific AZ
+
+		On demands, Reserved, Savings plan, Spot instances, Dedicated Host, Capacity Reservations
+
+	EBS Elastic Block Storage, Netowkr USB sticks
+		EBS volume is a network drive that can be attached to my instance while it runs
+		allows data persistance even after termination
+		can only be mounted to one instance at a time at CCP level
+		multi attach for associate levels
+		bound to specific availability zone
+		Free tier: 30GB of general purpose or magnetic per month
+	
+		A network drive
+			uses network to communicate with instance, there may be latency
+			detached from one instance and attached to another instance
+			locked to availability zone (AZ)
+			EBS in in one region can not be attached to another region
+		have a provisioned capacity
+			billed for all provisioned capacity
+			can increase capacity over time if needed
+
+		Delete on termination attribute
+			controls EBS behaviour when EC2 instance is terminated
+			default: root EBS volume is deleted (attribute enables)
+			default: other attached EBS volumes are not deleted (attribute disables)
+
+		EBS snapshot fetures
+			snapshot archive: move snapshot to an 'archive tier' (cheaper)
+			takes within 24-72 hours of restoring the archive
+			Recycle bin for EBS snapshots: not permanently deleted
+				Retention from 1 day to 1 year
+			fast snapshot restore: force full initialization of snapshot to have no latency on the first use (expencive)
+
+		Volume types
+			gp2/gp3: general purpose SSD volume that balances price and performance
+				cost effective
+				low latency
+				used for boot volumes, VM, development and test enviorments
+				1 GiB - 16 Tib
+				gp3: 3000 IOPS, 125MiB throughput, can increase to 16000 IOPS and 1000 MiB throughputs
+				gp2: small volume bursts up to 3000 IOPS, Size and IOPS are linked, 16000 IOPS max
+			io1/io2 block express: high performance SSD for missin critical low-latency or high-throughput workloads
+				io1
+					bluetoothctl connect F4:4E:FD:02:51:BB					nitro EC2: 64000 PIOPS
+					other EC2: 32000 PIOPS
+					PIOPS increase independant of storage size
+				io2
+					
+			
+			stl HDD: low cost HDD volume, designed for frequently accessed, throughput intensive workloads
+			scl HDD: lowest cost HDD, used for less frequently accessed workloads
+
+			ONLY gp2/gp3 and io1/io2 can be used as boot volumes (root)
+
+	EC2 Instance Store
+		If you need high performance hard disk, use EC2 Instance Store
+		Better I/O performance
+		Storage lost on instance stop
+		good for buffer, cache, scratch data, temporary content
+		risk of data loss
+		
+
+	AMI Amazon Machine Image
+		customization of EC2 instance: add my own software, configuration, operating system, monitoring
+		AMI are built for specific regions(canbe copied across regions)
+		Launch EC2 instances through
+			Public AMI: AWS provided
+			My own AMI: make and main tain by myself
+			AWS Marketplace AMI: AMI someone else made and sells
+
+		Process
+			start EC2 instance and customize it
+			Stop EC2 instance for data integrity
+			Build AMI, this will also create EBS snapshots
+			Launch instances from other AMIs
+
+SECURITY
+
+	Security groups (fire wall)
+		control traffic that is allowed in r our of our instance
+		only contain allow rules
+		security group rules can reference by IP or by security group
+		fire wall on instances
+		regulate
+			access to ports
+			authorised IP ranges - IPv4 and IPv6
+			control of inbound and outbound network
+
+		are locked to region / VPC combination
+		it is good to maintain one seperate security group for SSH access
+		if application is not accessible (time out), then there is a security group issue
+		"connection refused" error then it is an application issue or it is not launched
+		
+		default
+			all inbound traffic is blocked
+			all outbound traffic is allowed
+
+		launch-wizard-1	
+			HTTP and SSH inbound traffic is allowed, port 22 and 80 in
+			all outbound traffic is blocked
+			
+		authorising security groups to alow instances to comunicate
+			example:
+				an instancen allows in traffic from instances who have  security group 1 and 2
+				so data from an instance  with security group 3 will not be allowed in
+
+****************KNOW FOR EXAM
+			ports to know
+				22 = SSH, log into a linux instance
+				21 = FTP, file sharing
+				22 = SFTP secure file transfer protocol, upload files using SSH
+				80 = HTTP, access to unsecures websites
+				443 = HTTPS, access secured websites
+				3389 = RDP, remote desktop protocol, log into a windows instance
+
+IPv4 charges
+	$0.005 per hours of public IPv4 ($3.6 per month)
+	new accounts: FREE EC2 instance for 750 hours per month for 12 months
+	No other free instance
+	Multiple instance usage, uses the provided FREE hours
+
+IPv6 charges
+	FREE but not supported on all devices or networks
+
+
+Vertical scale: increase size t2.micro -> t2.large
+Horizontal scale: increase instances/systems
+High availability: application is running on multiple data centers, more people access and can survive data loss
+
+Load balancing
+	
+	ELB provides static DNS
+	NLB provides DNS and IP
+	ALB provides static DNS
+	
+	Single point of access to application:
+	Spread load across instances
+	Easier to handle failures
+	Health status of instances
+	SSL termination (HRRPS) for websites
+	Stickiness with cookies
+	Seperate private and public traffic
+
+	ELB health checks prevent sending traffic to unhealthy instances
+
+	ELB elastic load balancer
+
+		Managed by AWS
+		Guaranteed to be working
+		Integrated with many AWS services
+
+		Health checks
+			Checks are done on port or route
+			load balancer re routes traffic from unhealthy instances
+			200 status code (OK)
+
+		Types of load balancers
+			CLB Classic load balancer: HTTP, HTTPS TCP SSL (deprecated)
+			ALB Application load balancer: HTTP, HTTPS, WebSocket, Layer 7
+			NLB Network loabalancer: TCP, TLS, UDP Layer 4
+			GWLB Gateway load balancer: Layer 3, IP protocol
+
+	Security groups
+
+		instances only communicate with load balancer
+		security group of instance and load balancer are linked
+
+
+****	TO KNOW 
+		LEARN different load balancers
+		applications do not see IP of clients
+		client <--Client IP--> Load balancer <--Private IP--> application 1
+						     <--private ip--> application 2
+
+****		X-Forwarded HTTP Headers added by proxies or load balancers to carry info about the original request
+			
+			X-Forwarded-For
+				indicates original IP of client tht made request
+				a comma seperated lst of IP addresses where the first one is the original client and the subsequent IPs are requests passed through
+				on each request made or IP passed through, IP is added to the list
+				example: X-Forwarded-For: 192.168.1.1, 10.0.0.1, 172.16.0.1
+
+			X-Forwarded-Host
+				Indicates the original host header as received by proxy or load balancer
+				allows backend server to know hostname requested by client
+				example: X-Forwarded-Host: www.example.com
+
+			X-Forwarded-Proto
+				indicates protocol (HTTP or HTTPS) used by the client to make request
+				helps server determine wather original request was secure or not
+				example: X-Forwarded-Proto: https
+
+			X-Forwarded-Port
+				indicates the port number used by client to connect to the proxy srver or load balancer
+				useful for applications that depend on specific ports
+				example: X-Forwarded-Port: 443
+
+			Forwarded
+				provides all information in a single header
+				example: Forwarded: for=192.168.1.1; proto=https; host=www.example.com
+
+		we can get ports X-forwarded-for, x-forwarded-port, x-forwarded-proto
+			
+		it is good practice to only allow inbound from load balancer to applications
+
+
+****	ALB HTTP/2 WebSocket layer 7
+
+		Load balance multiple applications across multiple machines
+		Load balance multiple applications on the same machine (container)
+
+		Supports redirect from HTTP to HTTPS
+		Supports route redirecting based on query strings, hostname or path URLs and IP
+			meaning: depending on the incoming route/URL to the load balancer, the load balancer redirects to the apropriate application
+
+		ALB good for micro services and container based applications
+		port mapping to redirect to a dynamic port in ECS
+		health checks done on target group level
+		target groups: EC2, ECS, Lambda functions, IP addresses
+
+
+****	NLB TCP, UDP, Layer 4
+		high performance: millions of traffic requests per second, low latency
+		Only one static IP per AZ
+		helpful for whitelisting specific IP
+		Target groups: EC2, Private IP, Application load balancer
+			client <--> NLB <--> ALB 1 <--> Application 1
+						   <--> application 2
+					<--> ALB 2 <--> application 1
+						   <--> application 2
+		Health checks support TCP, HTTP, HTTPS
+
+****	GWLB IP packet, Layer 3
+		USES GENEVE Protocol on port 6081
+		Target groups: EC2, Private IP
+		used for deploying and managing 3rd pary network virtul appliances in AWS
+		used for firewalls, intrusion detection, prevension systems, deep packet inspection systems, payload manipulation
+			clients <--> GWLB: Transparent Network Gateway <--> 3rd party security <--> GWLB: Load balancer <--> application
+
+		combines 2 functions
+			Transparent Network Gateway: single entry and exit for all traffic
+			Load balancer: distribute traffic to applications
+	
+	Sticky sessions/ session affinity
+		Clien is always redirected to the same instance by the load balancer
+		ALB and NLB has this feature
+		There is an expiry date for stickiness of each client
+		Use Case: User wont lose session data
+
+		Application based cookies
+			custom cookie
+				Generated by the aaplication/developer
+				can include custom attributes required by application
+				must have individual name for each target group
+				Reserved words (do not use): AWSALB, AWSALBAPP, AWSALBTG
+			application cookie
+				generated by load balancer
+				cookie name is AWSALBAPP
+		
+		Duration based cookie, 1 sec to 7 days
+			generated by load balancer
+			cookie name: AWSALB, AWSELB
+			duration provided by load balancer
+
+	Cross-zone load balancing
+		balance load by redirecting traffic to different zone
+		
+		EXAMPLE
+
+			100 CLients in total
+
+			50 clients in zone 1: 2 instances
+			50 clients in zone 2L 8 instances
+
+			Cross-zone load balancer redirects the the clients in zone 1 to zone 2, each instance gets 10 clients
+			meaning that clients in zone 1 will be using instances in zone 2
+		
+			even distribution to instances regardless of zone
+
+			without cross-zone balancing, you would have in zone 1, 25 clients using each instance and in zone 2 approximately 6.25 clients using each instance
+
+		ALB cross-zone balancing
+			enabled by default
+			no extra cost if clients are sent to different zone
+
+		NLB and GWLB cross-zone balancing
+			disabled by default
+			extra cost if client is sent to different zone
+
+		CLB cross-zone balancing
+			disabled by default
+			no extra cost if enabled
+
+		All you have to do is enable it in the load balancer settings
+
+	SSL/TLS 
+
+		SSL Secure Sockets Layer: this is a certificate that allows traffic between clients and load balancer to be encrypted IN TRANSIT
+		TLS Transport Layer Security: newer version of SSL
+			BUT STILL REFERRED TO AS SSL
+		Public SSL certificates are issued by Vertificate Authorities
+			Comodo, Symantec, GoDaddy, GlobalSign, Digicert, Letsencrypt
+		SSL certificates have expiration date set by me and must be renewed
+		Lock picture if a website has SSL
+
+		SSL Certificates
+
+			Load balancer uses x.509 certificate
+			certificates can be managed ACM (AWS Certificate Manager)
+			you can create and upload your own certificates
+
+			HTTPS Listener
+
+				you must specify a default certificate
+				you can add optional list of certificates to suport multiple domains
+				Clients can use SIN(Server Name Indication) to specify the hostname they reach
+				Ability to specify a security policy to support older versions of SSL/TLS
+
+		SNI
+		
+			solves the problem of loading multiple SSL certificates onto one web server (to serve multiple websites)
+			this is a newer protocol so the client indicates the host name of the target server in the initial SSL handshake
+			the server then finds the correct certificate or returns a default one
+			loadbalancers use SNI to redirect to the proper target group
+	
+			ONLY works for ALB, NLB and CloudFront
+
+			client wants domain.app.com <--> ALB (using SNI the correct certificate is used) <--> domain.app.com
+
+		ALB and NLB: supports multiple listeners with multiple SSL certificates. Uses SNI
+
+****	Connection Draining/Deregistration Delay for ALB and NLB
+		Time to complete 'in-flight requests' while the instance is de-registring or unhealthy
+		Stops sending new requests to the EC2 that is deregistring
+		1 to 3600 seconds, default 300 sec
+		0 to disable
+		low value if requests are short
+
+	ASG Auto Scaling Group
+
+		when load increases or decreases we scale out o scale in
+		scale out: increase instances
+		scale in: decrease instances
+
+		can set min and max instances
+		automatically registers instances to a load balancer
+		new EC2 created if previous one is Unhealth
+
+		ASG is free, only pay for newly created instances
+
+		cooldown period for any scaling activity
+
+		ASG Attributes (Launch template)
+			AMI
+			Instance type
+			EC2 user data
+			EBS volumes
+			Security groups
+			SSH key pair
+			IAM roles for instances
+			Network + Subnet information
+			Load balancer information
+			Initial capacity
+			Min size
+			Max size
+			... etc
+			
+		CloudWatch alarms and Scaling
+			Alarm watches a metric: CPU usage or other custom metric
+			Alam triggers auto scaling
+
+		ASG Policies
+			dynamic scaling
+				Target tracking scaling: I want the average ASG CPU to be at 40 % usage
+				simple/step scaling: on alarm trigger, add or remove instance
+			scheduled scaling
+				anticipated usage pattern
+			predictive scaling: continuously forecast load and schedule scaking ahead
+
+		good metrics to scale on
+			CPU utilization: average CPU usage
+			Request count per target: number of requests per instance
+			Average Network in or out
+			Any custom metric that is pushed using CloudWatch
+
+		Scaling cooldown: after scaling activity the default is 300 sec cooldown
+			instances will not be launched or terminated because allowing metrics to stabilize
+
+		Auto scaling instance refresh
+			updates template then recreate all instances
+			set minimum healthy percentage
+			
+			when new template is created, the instances finish the work, get terminated and new instances with updated template are created
+
+Amazon RDS Relational Database Service
+
+	AWS managed SQL database
+	Postgres
+	MySQL
+	MariaDB
+	Oracle
+	Microsoft SQL Server
+	IBM DB2
+	Aurora (AWS Proprietary database)
+
+	why use RDS?
+		automated provisioning
+		OS patching
+		backups and restores to imestamp
+		monitoring
+		read replicas
+		multi AZ
+		maintenance windows
+		vertical and horizontal scaling
+		storage backed by EB
+
+	Can not SSH to your instances
+
+****	RDS has autoscaling SO you MUST set maximum storage threshhold
+		Automatic storage modification if:
+			free storage is less than 10% of allocated storage
+			low storage lasts at least 5 minutes
+			6 hours have passed since last modification
+
+		useful for unpredictable workloads
+
+****	RDS read replicas for read scalability
+
+		Up to 15 read replicas
+		Within AZ
+		Cross AZ
+		Cross Region
+		replication is ASYNC, the reads are consistent
+
+		example
+
+			[      Application      ]
+			|	|	|	|
+		       Write   Read    Read    Read
+			|       |       |       |
+		        [   DB  ]     [DB]     [DB]
+
+			note these databases are async, copies of the same database
+
+		RDS read replicas in the same region cost no extra money BUT transfer of data from one region to another does cost extra
+
+		RDS multi AZ (disaster recovery)
+		
+
+		RDS Disaster recovery (standby database)
+			SYNC replication
+			One DNS that has faiilover standby
+			Read or Write not allowed
+
+	Amazon Aurora
+
+		Postgres and MySQL are both supported as AuroraDB
+		5X performance over MySQL and 3X performance over Postgres
+		Automatic growth
+		can have upto 15 replicas, may take up to 10 min which is less than other Databases
+		Failover is instant
+
+		High availability and Read scaling
+			6 copies of data across 3 AZ, 4 copies needed for writes, 3 are for reads (NOTE: i am not sure what this exactly means but 1 master is used for writes)
+			1 instance takes wrtites (master)
+			self healing with peer to peer replication
+			storage is striped across 100s of volmes
+			automated failover for master in less than 30 seconds
+
+		AuroraDB Cluster
+			Writer endpoint: points fo master DB
+			Reader endpoint: points to load balancer that contains other 5 replicas
+
+		Features of AuroraDB
+			automatic fail-over
+			backup and recovery
+			isolation and security
+			industry compliance
+			push button scaling(auto scaling)
+			automated patching with 0 downtime
+			advanced monitoring
+			routine maintenance
+			backtrack: restore data at anytime without using backups
+
+	RDS and Aurora security
+		at-rest encryption
+			master and replicas encryption using AWS KMS must be defined at launch time
+			if master is not encrypted, the read replicas CAN NOT be encrypted
+			to encrypt an un-encrypted database: take a snapshot of database and restore as encrypted
+		in flight encryption
+			TLS ready by default, use the AWSTLS root certificates client-side
+		IAM Authentication: use IAM roles to connect to DB instead of username/password
+		security groups: you can controll network access to RDS / AuroraDB
+		NO SSH except on RDS custom
+		Audit logs can be enabled and sent to cloud watch logs for longer retention
+
+	Amazon RDS Proxy
+		fully managed database proxy for RDS
+		allows app to pool and share databse connections established with database
+		this improves database efficiency by redusing the stress (CPU RAM) and minimize open connections and timeouts
+		Fully serverless, Autoscaling, highly available (Multi-AZ)
+		Reduced RDS and Aurora failover time by 66%
+		support RDS: MySQL, PostgreSQL, MariaDB, Microsoft SQL Server, Aurora (MySQL, PostgreSQL)
+		no code change required for apps
+		Enforces IAM Authentication for DB, and securely store credentials in AWs secrets manager
+		RDS proxy is nver publicly acessible (only accessible through VPC)
+
+		|		VPC		 |
+		| Lambda  Lambda  Lambda  Lambda |
+		|   |       |       |       |	 |
+		|   ------------------------	 |
+		|		|		 |
+		| |	  Private subnet	 |
+		| |		|		 |
+		| |	|   RDS Proxy   |	 |
+		| |		|		 |
+		| |	|RDS DB Instance|	 |
+
+		Summary RDS Proy: enforces IAM security, Reduces failover-time, Minimzes connections to DB
+
+		NOTE: AWS provides proxy that can be set up for anything and not just Databases
+
+AWS Elasticache
+
+	Similar to how RDS manages relational databases
+	ElastiCache manages Redis and Memcached
+	In memory database, Low latency, high performance
+		to reduce load off of databases for read intensive work
+	Makes application stateless
+	AWS takes care of OS, patching, optimizing, setup, configure, monitor, failure, recovery and backups
+	Require heavy coding on the pplication
+
+	Apps do CRUD operation to the cache, if cache is not available then the CRUD operation is done on the Database and then the cache gets that same operation from the database to have consistent data
+	
+	You can store user settion to make application stateless: application writes session data into elasticache
+
+	Redis
+		
+		Multi AZ
+		Auto-Failover
+		Create read replicas to scale and have high availability
+		data durability using AOF persistance
+		backup and restore features
+		supports sets and sorted sets
+
+	MemCached
+
+		Multi node for partitioning of data
+		not high availability (replicas)
+		no data persistance
+		Backup and restore only for serverless version of memcached
+		Multi threaded architecture
+
+****	Cache implementatin strategies and considerations
+
+		is it safe to cache data? data maybe out of date
+		patters to use caching: if data is changing slowly, if few keys needed
+		patters to not use caching: if data changes rapidly, if large key space needed for database
+		which caching design patter is best for us?
+			lazy loading/cache-aside/lazy population: attempt to reterieve from cahce, if requested data is not in cache then get data from database for applicatin and also write the data in cache
+				pros: only used data is cached, node failures are not fatal
+				cons: cache miss results in 3 rounds trip (delay, bad UX), data maybe up to date in database but not in cache
+
+				def get_user(user_id):
+					record = cache.get(user_id)
+					if record is None:
+						record = db.query("SELECT * FROM Users WHERE ID = ?", user_id)
+						cache.set(user_id, record)
+					return record
+
+			write through: add or update cache when database is updated, any write operation to database also writes to the cache
+				pros: data is never stale, reads are quick, no read penalty
+				cons: missing data untill Database is updated, ahce will not have all data untill all data is written into database, cache churn - most of the data will not be read
+
+				def save_user(user_id, value):
+					record = db.query("UPDATE Users ... WHER ID = ?", user_id)
+					cache.set(user_id, record)
+					return record
+
+			cahe evictions, time to live TTL
+				cache eiction can happen in 3 ways
+					item exlicitly deleted from cache
+					memory is full and data not used recently (Least Recently Used)
+					set item time to live
+
+				if too many evictions, it means you should scale up memory
+
+		Amazon MemoryDB for Redis
+
+			In memory database that has Redis compatible API
+			high performance, 160 million requests per second
+			can have multi AZ as an in memory database
+			can scale from 10s of GBs to 100s of TBs
+
+****	Read replicas use Asynchronous replication, Multi-AZ uses Synchronous replication
+	Oracle does not support IAM Authentication
+	Can not create Encrypted replicas form an Unencrypted database
+	max of 5 read replicas for elasticache with cluster mode disables
+
+	You have an ElastiCache Redis Cluster that serves a popular application.
+	You have noticed that there are a large number of requests that go to the database because a large number of items are removed from the cache before they expire.
+	What is this called and how to solve it?
+	
+		Cache evictions, sclae up or out your elasticache redis cluster
+
+What is DNS
+	Domain Nam System that translates to machine IP address www.google.com -> 172.217.18.36
+	DNS uses hierarchical naming structure
+		.com
+		google.com
+		www.google.com
+	Zone file: contains DNS records
+	Name server: resolves DNS queries
+	Top level domain (TLD): .com, .us, .in, .gov, .org ... etc
+	second level domain (SLD): amazon.com, google.com, facebook.com
+	
+        |          URL            |
+        http://api.www.example.com.
+	|     |   |   |       |   |
+	|     |   |   |       |   Root
+	|     |   |   |       TLD
+	|     |   |   SLD
+	|     |   Sub Domain
+	|     FQDN Fully Qalified Domain Name
+	Protocol
+
+	
+	|Web browser| I want to access google.com
+	
+	|Web browser| -> |Local DNS server| managed by ISP
+
+	|Web browser| -> |Local DNS server| -> |Root DNS server| managed by ICANN. request: Do you know google.com? response: no but I do know .com, go this new address and ask them
+
+	|Web browser| -> |Local DNS server| -> |TLD DNS server| managed by IANA. request: do you lknow google.com? response: I dont but I know who else does, go to this address
+
+	|Web browser| -> |Local DNS server| -> |SLD DNS server| mmanaged by who ever is hosting the website. request: hey do you know google.com? response: yes I do, please come in
+
+Route 53
+
+	Fully managed and authoritative DNS
+	Authoritative: the customer is the one in control of the DNS records
+	Is Domain registrar
+	Can check health of resources
+	The only AWS service that provides 100% availability SLA
+	
+	Route 53 Records
+
+		how you want to route traffic for a domain
+		each record contains
+			Domain/Subdomain Name
+			Record type: A or AAAA
+			Value of record: 12.34.56.78
+			Routing policy: how route 53 responds to queries
+			TTL: amount of time the record is cached at DNS Resolvers
+
+****		Record types
+
+			A: maps a host name to IPv4
+			AAAA: maps a host name to IPv6
+			CNAME: maps a hostname to another host name
+				target may be A or AAAA
+				can not create CNAME records for the top node of DNS (Zone Apex)
+				does not work on Root Domain names
+			NS: Name Server for the hosted zone, IP addresses that can respond to the DNS queries, conrols how traffic is routed for a domain
+			ALIAS: points a host name to an AWS Resource example: mydomain.com -> something.amazonaws.com
+				works for Root and Non Root domain
+				Free of charge
+				always of time A or AAAA
+				TTL can not be set
+
+	Hosted zone
+
+		A container for records thatdefine how to route traffic to a domain and its subdomains
+
+		Public hosted zones: contains records that specify how to route traffic on the internet (public domain names)
+
+		Private hosted zones: contains records that specify how you route traffic within one or more VPC (private domains)
+
+		$0.50 per month per hosted zone
