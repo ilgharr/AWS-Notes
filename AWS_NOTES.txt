@@ -842,3 +842,225 @@ Route 53
 		Private hosted zones: contains records that specify how you route traffic within one or more VPC (private domains)
 
 		$0.50 per month per hosted zone
+
+****	How to host apex (cloudrahno.com)
+		Launch an instance
+		Create a record with the hosted zone
+		record must be A record, Alias, select instance for end point, select region taht record will be hosted on
+
+	Route 53 Routing Policies
+
+		Define how Route 53 responds to DNS queries
+
+		Do not get confused by the word 'Routing', this is not the same as load balancer routing, DNS does not route traffic, it only responds to DNS queries
+
+	Routing Policies
+
+		Simple
+
+			Typically route traffic to  a single resource
+			can specify multiple values of IPv4 in the same record
+			If client receieves multiple values (they point to the same resource) a random one is chosen
+			If Alias is enabled, specify only one AWS resource
+			Can't be associated with health checks
+
+		Weighted
+
+			Control the % of the requests that go to each specific resource
+				example: 70% to instance A, 20% to instance B and 10% to instance C
+				traffic% = (weight forspecific record)/(sum of all the weights for all records)
+				Weights dont have to sum to 100
+			DNS records must have the same name and type
+			Can do health checks
+			use case:  load balancing between regions, testing new application versions by sending some traffic to it
+			Weight of 0 to stop sending traffic to a resource
+			If all records have 0 weight, they will have equal traffic and not zero
+
+		Latency
+
+			Redirect to resources with the least latency (closest to client)
+			Measured between users and AWS regions
+			German users maybe redirected to us if it will result in lower latency
+			can do health checks
+
+		Failover
+
+			Client --> [AWS Route 53] Health check (mandatory)  ---> EC2 A (Primary)
+							|
+						Failover---> EC2 B (Secondary)
+
+		Geolocation
+
+			Based on client location
+			Specify continet, country, US State
+			Create default record (incase if there is no match on location)
+			use case: website localization, restricted content, load balancing
+			can do health checks
+
+		Geoproximity
+
+			based on client proximityi
+			ability to shift traffic based on the defined bias
+			to change the size of a geographic region, specify bias values:
+				to expland 1 to 99, more traffic to the source
+				to shrink -1 to -99, less traffic to the resource
+			resources can be AWS resource (specify AWS region) or non AWS resource (specify lattitude, longitude)
+			must use Route 53 traffic flow
+
+		IP based routing
+
+			You provide a list of CIDRs for clients and the corresponding endpoints/locations (user IP to Ebndpoint mappings
+			use case: optimize performance, reduce network cost
+			example: route end users from a particular ISP to a specific endpoint
+
+		Multi value
+
+			Use when routng traffic to multiplke resources
+			Route 53 return multiple values/resources
+			can Use Health checks
+			Not a substitute for Load balancing
+			
+
+		Traffic flow: this visualizes the all the traffic policies
+
+			simplify the process of creating and maintaining records in large and complex configurations
+			visual editor to manage complex routing decision trees
+			configurations can be saved as 'traffic flow policy'
+
+VPC Virtual Private Cloud
+
+****	VPC, subnets, internet gateways, NAT gateways, Security groups, Network ACL, VPC flow logs, VPC peering, VPC endpoints, site to site VPC and direct connect
+
+	VPC: Private network to deploy resources, private as in "I own the space and can allow or not allow public traffic in as i please"
+	Subnet: Partition of my private network
+	Public Subnet: subnet that is accessible to the internet
+	Private Subnet: subnet that is not accessible by internet
+	Route tables: define access to internet and between subnets
+
+	[AWS Cloud    [Region    [VPC CIDR Range    [AZ1[Private Subnet] [Public Subnet]]    [AZ2[Private subnet] [Public Subnet]] ]]]
+
+	Internet Gateways & NAT Gateways
+
+		Internet gateway allows VPC instance to connect to internet
+		Public subnets have route to the internet gateway
+		Private subnets use NAT gateways that allows private subnets toa ccess the internet while being private
+			this is done through connecting the private subnet to the public subnet that is connected to the Internet Gate Way
+			NAT has access to the IGW but not the reverse
+
+	Network ACL & Security Groups
+
+		A firewall that controls traffic from and to the subnet
+		can have ALLOW or DENY rules
+		attached at the subnet level
+		rules only include IP addresses
+
+		|-----------------------------------------------|
+		|VPC	|---------------------------------------|
+		|	|Subnet	|----|	|-----------------------|
+		|	|	|NACL|	|Security Group	|-------|
+		|	|	|    |	|		|EC2	|
+		<--------------->    <------------------>	|
+		|	|	|    |	|		|-------|
+		|	|	|----|	|-----------------------|
+		|	|---------------------------------------|
+		|-----------------------------------------------|
+
+	VPC Flow Logs
+
+		capture information about IP traffic going into your interfaces
+			VPC Flow Logs
+			Subnet Flow Logs
+			Elastic Network Interface Flow Logs
+		Help to monitor and trouble shoot connectivity issues
+			subnets to internet
+			subnets to subnets
+			internet to subnets
+		captures network information from AWS managed interfaces
+			ELB, ElastiCache, RDS, Aurora, etc...
+		Flow Logs can be sent to S3, CloudWatch logs, Kinesis Data Firehouse
+
+	VPC Peering
+
+		connect to VPC privately using AWS Network
+		make them behave as if they were om the same netwok
+		must not have overlapping CIDR (IP address range
+		VPC peering connection is not transitive, must be established for each VPC that needs to communnicate with another
+
+****	VPC Endpoints
+
+		Endpoints allow you to connect to AWS services using private network instead of the public www network
+		this gives enhanced security and lower latency access to AWS services
+
+	Site to Site VPN
+
+		Connect an onpremises VPN to AWS
+		connection is automatically encrypted
+		goes over the public internet
+
+	Direct Connect
+
+		Establishes a physical connection between on-premises and aWS
+		The connection is private secure and fast
+		Goes over a private network
+		takes atleast a month to establish
+
+	VPC SUmmary
+
+		VPC: Virtual Private Network
+		Subnets: Tied to an AZ, Network partition of a VPC
+		Internet Gateway: at VPC level, provide internet access
+		NAT Gateway / instance: giver internet access to private subnets
+		NACL: stateless, subnet rules for inbound and outbound
+		Security Groups: stateful, operates at instance level
+		VPC Peering: connect two VPC with non overlapping IP ranges
+		VPC Endpoints: Provide private access to AWS services with VPC
+		VPC Flow Logs: network traffic logs
+		Site to Site VPN: VPN over public internet between on-premises DC and AWS
+		Direct Connect: direct private connection to AWS
+
+	3 tier solution architecture
+
+		[client] <--> [DNS Query with Route53]
+		  |
+		  -> [ELB] (Public Subnets)
+		      |
+		      |     | ASG | (Private Subnets)
+		      ----> |EC2 A| <------------------> | Database | (Database Subnets)
+		      |     |     |			 |          |
+		      ----> |EC2 B| <------------------> |          |
+		      |     |     |			 |          |
+		      ----> |EC2 C| <------------------> |          |
+
+	LAMP Stack on EC2
+
+		Linux: OS for EC2 instances
+		Apache: Web server that run on Linux
+		MySQL: Database on RDS
+		PHP: Application login
+
+		can add Redis / Memcached and EBS
+
+	Wordpress on AWS
+
+		Same as 3 tier solution architecture but it also uses EFS
+
+S3
+
+	Use cases: backup and storage, disaster recovery, archive, hybrid cloud storage, apllicatin hosting, medis hosting, data lakes & big data analytics, software delivery, static website
+
+	S3 allows people to store objects (files) in a "bucket" (directory)
+
+	Buckets must have a globally unique name (across all regions all accounts)
+
+	defined at region level
+
+	S3 looks like a global servce but buckets are created in a region
+
+	naming convention:
+		no uppercase
+		no underscore
+		3-63 characters long
+		Not an IP
+		must start with lowercase letter or number
+		can not start with "xn--"
+		can not end with "-s3alias"
