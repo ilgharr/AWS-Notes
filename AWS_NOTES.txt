@@ -1063,4 +1063,209 @@ S3
 		Not an IP
 		must start with lowercase letter or number
 		can not start with "xn--"
-		can not end with "-s3alias"
+		can not end with "-s3aliaso"
+
+	S3 Objects
+		key is the full path: s3://my-bucket/my_file.txt
+		object values are the content of the body
+			max size: 5TB
+			if uploading more than 5GB, must use "multi-part upload"
+		Metadata: list of text key/value pair
+		Tags: unicode key/value pair up to 10, useful for security/lifecycle
+		Version ID (ife versioning enabled)
+
+	S3 Security
+		User-Based
+			IAM Policies - which API calls should be allowed for specific user from IAM
+		Resource based Security
+			Bucket Policies - bucket wide rules from S3 console - allows cross account
+			Object Access Control List (ACL) - finer grain (can be disables)
+			Bucket Access Control List (ACL) - less common (can be disables
+		NOTE: an IAM principal can access an S3 object if...
+			the user IAM permissions allow it OR the resource policy allows it
+			AND there is no explicit DENY
+		Encryption: encrypt objects in Amazon S3 using encryption keys
+
+	S3 Bucket Policies
+		JSON based policies
+			Resources: buckets and objects
+			Effect: Allow/Deny
+			Actions: set of API to allow or deny
+			Principal: the account or user to apply the policy to
+
+		Use S3 bucket policy to:
+			grant public acess to the public
+			force objects to be encrupteed at upload
+			grant access tp another account
+
+		example:
+			{
+				"version": "2012-10-17",
+				"Statement": [
+					"Sid": "PublicRead",
+					"Effect": "Allow",
+					"Principal": "*",
+					"Action": ["s3:GetObject"],
+					"Resource": ["arn:aws:s3:::examplebucket/*"]
+				]
+			}
+
+		S3 - Versioning
+			you can version your files in S3
+			it is enabled at the bucket level
+			same key overwrite will change the version - 1, 2, 3 ...
+			it is best practice to version your buckets
+				protects against unintended delets
+				roll back to previous version
+			NOTES
+				files prior to having versionin enabled will have a version of "null"
+				suspending versioning will not delete previous versions
+
+	S3 Replication: CRR: Cross regional replication, SRR: same region replication
+		must enable versioning in source and destination bu ckets
+		buckets can be in diferent AWS accounts
+		copying is asynchronous
+		must give proper IAM persmissions to S3
+		CRR Use cases: compliance, lower latency, replication across accounts
+		SRR Use cases: log aggregation, live replication between production and test accounts
+
+		NOTES
+			after you enable replication, only new objects are replicated
+			optionally you can repl;icate existing objects using S3 batch replication
+				replicates existing objects and objects that failed replication
+
+			for delete operations
+				can replicate delete markers from source to target (optional)
+				deletions with version ID are not replicated (to avoid malicious deletes)
+
+			there is no "chaining" for replication
+				if bucket 1 has replication into bucket 2, which has replication into bucket 3
+				then objects created in bucklet 1 are not replicated into bucket 3
+
+****	S3 Storage Classes
+		standard-general purpose
+			used for frequently accessed data, low latency and high throughput, sustain 2 concurrent facility failures
+			use cases: big data analytics, mobile and gaming apps, content distribution
+		standard-infrequent access
+			used for data that is less frequently accessed, but requires rapid access when needed, lower cost than S3 standard
+			use cases: disaster recovery, backups
+		one zone-infrequent access
+			storage in one AZ
+			use cases: storing secondary backup copies on premises data or data you can recreate
+
+		glacier: low cost object storage meant for archiving/backup. price for storage plus object retieval cost
+		glacier instant retrieval
+			milli second retrieval, great for data accessed once a quarter
+			minimum storage duration of 90 days
+		glacier flexible retrieval
+			expedited(1 to 5 minutes), standard(3 to 5 hours), bulk(5 to 12 hours) free
+			minimum sotrage duration of 90 days
+		glacier deep archive
+			standard(12 hours), bulk(48 hours)
+		intelligent tiering
+			small monthly monitoring and auto tiering fee
+			moves objects automatiaclly between access tiers based on usage
+			no retrieval charges
+			
+			frequent access (automatic): default tier
+			infrequent access (automatic): objects not accessed f;or 30 days
+			archive instant access (automatic): objects not accessed for 90 days
+			archive access (optional): configurable from 90 days to 700+ days
+			deep archive access (optional): configurable from 180 days to 700+ days
+
+		can move between classes manually or using S3 lifecycle configurations
+
+EC2 Instance Metadata (IMDS)
+
+	allows EC2 instance to "learn about themselves" without using an IAM role for that purpose
+	you can retrieve IAM role name but not IAM policy
+	metadata: info about EC2 instance
+	usrdata: launch script of the EC2 instance
+
+	IMDSv1: is accessing http://169.254.169.254/latest/meta-data directly
+	IMDSv2: is more secure and is done in 2 steps
+		1: get session token (limited validity) - using headers and PUT
+			$ TOEN='something something'
+		2: use session token in IMDSv2 calls - using headers
+			$ curl http://something/something -H "something: $TOKEN"
+
+MFA with CLI
+
+	to use MFA with CLI you must create a temporary session
+	to do so you must run the 'STS GetSessionToken" API call
+
+****	aws sts get-session-token --serial-number <arn token here> --token-code <2fa token code here>
+		now use the output to create a profile
+		aws configure --profile <new profile name>
+			go to ~/.aws/credentials and input the following
+				aws_access_key_id
+				aws_secret_access_key
+				aws_session_token
+			now any api call will be through this account
+
+		NOTE: AWS CLI uses credentials located in multiple locations and certain locations take precendence over others, the follow is the correct order for locations in AWS CLI.
+			command line options -> enviorment variables -> EC2 instance profile
+
+AWS Limits (Quotas)
+
+	API Rate Limits
+		DescribeInstances API for EC2 has a limit of 100 calls per second
+		GetObject on S3 has a limit of 5500 GET per second per prefix
+		for intermittent errors: implement exponential backoff
+		for consitent errors: request an API throttling limit increase
+
+	Service Quotas (Service Limits)
+		running on-demand standard instances: 1152 vCPU
+		you can request a service limit increase by opening a ticket
+		you can request a service quota increase by using Service Quotas API
+
+	Exponential Backoff (any AWS service)
+		if you get throttling exception intermittently, use exponential backoff
+		retry mechanism already included in AWS SDK API calls
+		must implement yourself if using the AWS API as-is or in specific cases
+			must only implement the retries on 5xx server errors and throttling
+			do not implement on the 400 client errors
+
+		example
+			try first request for 1 second
+			try second request for 2 seconds
+			try third request for 4 seconds
+			try forth request for 8 seconds
+			try fifth request for 16 seconds
+
+		if a lot of people using the server, this takes load off of the server
+
+****AWS Credentials
+
+	Scenario Question
+		An application deployed on an EC2 instance is using enviormental variables with credentials from an IAM user to call the amazon S3 API
+		The IAM user has S3FullAccess permissions
+		The application only uses one S3 bucket, so according to best practices
+			An IAM role and EC2 instance profile was created for the EC2 instance
+			The role was assigned the minimum permissions to access that one S3 bucket
+	
+		The IAM instance profile was assigned to the EC2 instance, but it still jad access to all S3 buckets, WHY?
+			the credentials chain is still giving permission to the enviorment variables
+
+	Best practices
+
+		overall, never ever store AWS credentials in your code
+		best practice is for credentials to be inherited from the credentials chain
+
+		if working with AWS, use IAM roles
+			EC2 instances roles for EC2 instances
+			ECS roles for ECS tasks
+			Lambda roles for Lambda functions
+
+		if working outside AWS, use enviorment variables / named profiles
+
+	Signing AWS API Requests
+
+		when  you call the AWS HTTP API,  you sign the request so that AWS can identify you, using your AWS credentials
+		NOTE: some requests to Amazon S3 dont need to be signed
+		if you use the SDK or CLI, the HTTP requests are signed for you
+		you should sign an AWS HTTP request using signature v4 (SigV4)
+
+		SigV4 Request examples (2 ways)
+			HTTP Header options (signature in Authorization header)
+			Quesry String option, example:S3 pre-signed URLs (signature in X-Amz-Signature)
